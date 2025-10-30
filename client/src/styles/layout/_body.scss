@@ -1,0 +1,8 @@
+@use '../base/variables';
+
+body {
+    background-color: variables.$color--background;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
