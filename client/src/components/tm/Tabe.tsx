@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import '../../styles/components/tm/tape.scss'
 
 export enum HeadMoveDir {
-    R,
-    N,
-    L
+    R = 'R',
+    N = 'N',
+    L = 'L'
 }
 
 interface TapeProps {
