@@ -1,51 +1,58 @@
 @use '../../base/variables';
 
-.tape {
-    display: flex;
-    justify-content: flex-start;
-    width: max-content;
-    transition: transform 0.3s ease-out;
+.tape-viewport {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
 
-    &::after,
-    &::before {
-        content: '';
-        display: block;
-        width: 10vw;
-        flex-shrink: 0;
-    }
-
-    .tape-cell {
-        position: relative;
-        width: 50px;
-        height: 50px;
-        border: 2px solid variables.$color--container-border;
+    .tape {
         display: flex;
-        justify-content: center;
-        align-items: center;
+        justify-content: flex-start;
+        width: max-content;
+        transition: transform 0.3s ease-out;
 
-        font-size: 2rem;
-        margin-right: -2px;
-        margin-bottom: -2px;
-        background-color: variables.$color--background;
-        transition: background-color 0.2s;
-        flex-shrink: 0;
+        &::after,
+        &::before {
+            content: '';
+            display: block;
+            width: 10vw;
+            flex-shrink: 0;
+        }
 
-        &.tape-head {
-            background-color: variables.$color--blue;
+        .tape-cell {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            border: 2px solid variables.$color--container-border;
+            display: flex;
+            justify-content: center;
+            align-items: center;
 
-            &::after {
-                content: '';
-                position: absolute;
-                bottom: -11px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 0;
-                height: 0;
-                border-left: 9px solid transparent;
-                border-right: 9px solid transparent;
-                border-top: 8px solid #000;
-                z-index: 10;
+            font-size: 2rem;
+            margin-right: -2px;
+            margin-bottom: -2px;
+            background-color: variables.$color--background;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+
+            &.tape-head {
+                background-color: variables.$color--blue;
+
+                &::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -11px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 0;
+                    height: 0;
+                    border-left: 9px solid transparent;
+                    border-right: 9px solid transparent;
+                    border-top: 8px solid #000;
+                    z-index: 10;
+                }
             }
         }
     }
 }
+
