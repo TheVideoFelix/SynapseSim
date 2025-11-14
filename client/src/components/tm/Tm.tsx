@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import Tape, { HeadMoveDir } from "./Tabe";
 import '../../styles/components/tm/tm.scss'
 import Container from "../ui/Container";
@@ -20,18 +20,38 @@ interface TMProps { }
 const TM: React.FC<TMProps> = () => {
     const [machineState, setMachineState] = useState<TM>();
     const socketRef = useRef<WebSocket>(null);
+    const autoStepTimeout = useRef<number>(0);
 
     useEffect(() => {
         socketRef.current = new WebSocket("ws://localhost:8000/ws/tm");
 
         socketRef.current.onmessage = (event) => {
-            const newState = JSON.parse(event.data);
-            console.log(newState);
-            const newMachine: TM = {
-                ...newState,
-                states: Array.from({ length: newState.statesLen }, (_, i) => `q${i}`),
-            }
-            setMachineState(newMachine);
+            const update = JSON.parse(event.data);
+            setMachineState((prev) => {
+                const base: TM =
+                    prev ?? {
+                        states: [],
+                        alphabet: [],
+                        tapeAlphabet: [],
+                        endState: '',
+                        startState: '',
+                        currentState: '',
+                        tapes: [],
+                        lastMoveDirs: [],
+                        isHalted: false,
+                    };
+
+                const next: TM = {
+                    ...base,
+                    ...update,
+                    states:
+                        update.statesLen !== undefined
+                            ? Array.from({ length: update.statesLen }, (_, i) => `${i + 1}`)
+                            : base.states,
+                };
+
+                return next;
+            });
 
         };
 
@@ -41,7 +61,7 @@ const TM: React.FC<TMProps> = () => {
             socketRef.current?.send(JSON.stringify({
                 type: "init",
                 data: {
-                    input: "1110001",
+                    input: "1110110010101010010101000111101100101010100101010001111011001010101001010100011110110010101010010101000111101100101010100101010001111011001010101001010100011110110010101010010101000111101100101010100101010001",
                 }
             }));
         };
@@ -52,8 +72,8 @@ const TM: React.FC<TMProps> = () => {
         };
 
         socketRef.current.onerror = (error) => {
-            console.log("Socket had an erroro: " +  error);
-            
+            console.log("Socket had an erroro: " + error);
+
         };
 
 
@@ -63,6 +83,23 @@ const TM: React.FC<TMProps> = () => {
             }
         };
     }, []);
+
+    useEffect(() => {
+
+        if (!machineState || machineState.isHalted) {
+            return;
+        }
+
+        autoStepTimeout.current = window.setTimeout(()=> {
+            sendStepMessage();
+        }, 700);
+
+        return () => {
+            if (autoStepTimeout.current) {
+                clearTimeout(autoStepTimeout.current);
+            }
+        }
+    }, [machineState]);
 
     const sendStepMessage = () => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -78,23 +115,34 @@ const TM: React.FC<TMProps> = () => {
         return <div>Loding turing machine ...</div>
     }
 
+
+    //const statesStr = `{${}}`;
+
     return (
         <div className="tm">
             <div className="tm-label">
-                <h1>M = &lang; Q, &Gamma;, b, &Sigma;, &delta;, q<sub>0</sub>, F &rang;</h1>
+                <h1>M = &lang; {machineState?.states ? (
+                    <>
+                        {'{'}
+                        {machineState.states.map((s, i) => (
+                            <span key={i}>
+                                q<sub>{s}</sub>
+                                {i < machineState.states.length - 1 ? ', ' : ''}
+                            </span>
+                        ))}
+                        {'}'}
+                    </>
+                ) : '{}'}, {machineState?.alphabet ? `{${machineState.alphabet.join(', ')}}` : '{}'}, {machineState?.tapeAlphabet ? `{${machineState.tapeAlphabet.join(', ')}}` : '{}'}, B, q<sub>{machineState?.startState}</sub>, q<sub>{machineState?.endState}</sub>, &delta; &rang;</h1>
             </div>
-            <button onClick={() => sendStepMessage()}>
-            Press
-            </button>
             <div className="tapes">
                 {machineState?.tapes.map(([leftTape, head, rightTape], index) => (
-                    
+
                     <div className="tape-section" key={`tape-${index}`}>
-                        <h3 className="tape-label">Tape {index+1}</h3>
-                        <Tape 
-                            leftTape={leftTape} 
-                            head={head} 
-                            rightTape={rightTape} 
+                        <h3 className="tape-label">Tape {index + 1}</h3>
+                        <Tape
+                            leftTape={leftTape}
+                            head={head}
+                            rightTape={rightTape}
                             currentHeadMoveDir={machineState?.lastMoveDirs?.[index] ?? HeadMoveDir.N}
                         />
                     </div>
@@ -103,7 +151,7 @@ const TM: React.FC<TMProps> = () => {
             </div>
             <Container className="state-container">
                 <h3 className="label">Current State</h3>
-                <h1 className="current-state">q0</h1>
+                <h1 className="current-state">q<sub>{machineState?.currentState}</sub></h1>
             </Container>
 
         </div>
