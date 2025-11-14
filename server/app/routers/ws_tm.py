@@ -1,11 +1,11 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import json, os
-from tm_simulator import load_tm, Tape
+from tm_simulator import load_tm
 
 router = APIRouter()
 
 
-tm = load_tm(os.path.join(os.path.dirname(__file__), "../core/tms/invert.TM"))
+tm = load_tm(os.path.join(os.path.dirname(__file__), "../core/tms/count.MTTM"))
 
 
 @router.websocket("/ws/tm")
