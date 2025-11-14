@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import '../../styles/components/tm/tape.scss'
+import Container from "../ui/Container";
 
 export enum HeadMoveDir {
     R = 'R',
@@ -14,10 +15,11 @@ interface TapeProps {
     currentHeadMoveDir: HeadMoveDir;
 }
 
-const TOTAL_CELLS = 16;
-const CENTER_POS = 7;
+const TOTAL_CELLS = 17;
+const CENTER_POS =  Math.floor(TOTAL_CELLS / 2);
 const LEFT_BUFFER_LIMIT = 4;
-const RIGHT_BUFFER_LIMIT = 10;
+const RIGHT_BUFFER_LIMIT = 12;
+const BLANK_SYMBOL = "B";
 
 const Tape: React.FC<TapeProps> = ({ leftTape, head, rightTape, currentHeadMoveDir }) => {
     const [visualHeadPos, setvisualHeadPos] = useState<number>(CENTER_POS);
@@ -37,21 +39,20 @@ const Tape: React.FC<TapeProps> = ({ leftTape, head, rightTape, currentHeadMoveD
     const cellsToTakeFromLeft = visualHeadPos;
     const cellsToTakeFromRight = TOTAL_CELLS - 1 - visualHeadPos;
 
-    const displayLeft = [...leftTape].slice(0, cellsToTakeFromLeft).reverse();
-    while (displayLeft.length < cellsToTakeFromLeft) {
-      displayLeft.push("B");
-    }
-
-    displayLeft.reverse();
+    const leftPart = leftTape.slice(-cellsToTakeFromLeft);
+    const displayLeft = Array(cellsToTakeFromLeft - leftPart.length)
+        .fill(BLANK_SYMBOL)
+        .concat(leftPart);
   
-    const displayRight = [...rightTape].slice(0, cellsToTakeFromRight);
-    while (displayRight.length < cellsToTakeFromRight) {
-      displayRight.push("B");
-    }
+    const rightPart = rightTape.slice(0, cellsToTakeFromRight);
+    const displayRight = rightPart.concat(
+        Array(cellsToTakeFromRight - rightPart.length).fill(BLANK_SYMBOL)
+    );
+
 
     return (
-        <div className="tape">
-            <div className="tape-container">
+        <Container className="tape-conatiner" padding="13px 0">
+            <div className="tape">
                 {displayLeft.map((char, index) => (
                     <div className="tape-cell" key={`left-${index}`}>
                         {char}
@@ -66,7 +67,7 @@ const Tape: React.FC<TapeProps> = ({ leftTape, head, rightTape, currentHeadMoveD
                     </div>
                 ))}
             </div>
-        </div>
+        </Container>
     );
 };
 
