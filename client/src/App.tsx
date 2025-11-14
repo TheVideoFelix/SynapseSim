@@ -1,5 +1,5 @@
-import Tape, { HeadMoveDir } from "./components/tm/Tabe"
 import TM from "./components/tm/Tm"
+import Container from "./components/ui/Container"
 
 function App() {
 
@@ -7,8 +7,9 @@ function App() {
 
   return (
     <>
-      <Tape leftTape={['h', 'a']} head="l" rightTape={['l', 'o', '!']} currentHeadMoveDir={HeadMoveDir.L} />
-      <TM />
+      <Container padding="20px">
+        <TM />
+      </Container>
     </>
   )
 }

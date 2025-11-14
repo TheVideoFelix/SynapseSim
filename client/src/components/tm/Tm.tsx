@@ -1,9 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
 import Tape, { HeadMoveDir } from "./Tabe";
+import '../../styles/components/tm/tm.scss'
+import Container from "../ui/Container";
 
 interface TM {
-    tapes: Array<[Array<string>, string, Array<string>]>
-    lastMoveDirs: HeadMoveDir[]
+    states: string[];
+    alphabet: string[];
+    tapeAlphabet: string[];
+    endState: string;
+    startState: string;
+    currentState: string;
+    tapes: Array<[Array<string>, string, Array<string>]>;
+    lastMoveDirs: HeadMoveDir[];
+    isHalted: boolean;
 }
 
 interface TMProps { }
@@ -16,9 +25,14 @@ const TM: React.FC<TMProps> = () => {
         socketRef.current = new WebSocket("ws://localhost:8000/ws/tm");
 
         socketRef.current.onmessage = (event) => {
-            const newSate = JSON.parse(event.data);
-            console.log(newSate);
-            setMachineState(newSate);
+            const newState = JSON.parse(event.data);
+            console.log(newState);
+            const newMachine: TM = {
+                ...newState,
+                states: Array.from({ length: newState.statesLen }, (_, i) => `q${i}`),
+            }
+            setMachineState(newMachine);
+
         };
 
         socketRef.current.onopen = () => {
@@ -60,20 +74,38 @@ const TM: React.FC<TMProps> = () => {
         }
     };
 
+    if (!machineState) {
+        return <div>Loding turing machine ...</div>
+    }
+
     return (
         <div className="tm">
+            <div className="tm-label">
+                <h1>M = &lang; Q, &Gamma;, b, &Sigma;, &delta;, q<sub>0</sub>, F &rang;</h1>
+            </div>
             <button onClick={() => sendStepMessage()}>
-                Press
+            Press
             </button>
-            {machineState?.tapes.map(([leftTape, head, rightTape], index) => (
-                <Tape 
-                    leftTape={leftTape} 
-                    head={head} 
-                    rightTape={rightTape} 
-                    currentHeadMoveDir={machineState?.lastMoveDirs[index]} 
-                    key={index} 
-                />
-            ))}
+            <div className="tapes">
+                {machineState?.tapes.map(([leftTape, head, rightTape], index) => (
+                    
+                    <div className="tape-section" key={`tape-${index}`}>
+                        <h3 className="tape-label">Tape {index+1}</h3>
+                        <Tape 
+                            leftTape={leftTape} 
+                            head={head} 
+                            rightTape={rightTape} 
+                            currentHeadMoveDir={machineState?.lastMoveDirs?.[index] ?? HeadMoveDir.N}
+                        />
+                    </div>
+
+                ))}
+            </div>
+            <Container className="state-container">
+                <h3 className="label">Current State</h3>
+                <h1 className="current-state">q0</h1>
+            </Container>
+
         </div>
     );
 };
