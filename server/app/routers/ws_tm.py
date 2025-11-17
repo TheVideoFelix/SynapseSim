@@ -5,7 +5,7 @@ from tm_simulator import load_tm
 router = APIRouter()
 
 
-tm = load_tm(os.path.join(os.path.dirname(__file__), "../core/tms/count.MTTM"))
+tm = load_tm(os.path.join(os.path.dirname(__file__), "../core/tms/fibonacci.MTTM"))
 
 
 @router.websocket("/ws/tm")
