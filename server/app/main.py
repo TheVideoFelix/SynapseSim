@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import ws_tm
+from app.routers import tm_router
+from app.core.tms import init_tms
 
 app = FastAPI()
 
@@ -14,7 +15,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(ws_tm.router)
+@app.on_event("startup")
+def startup_event():
+    init_tms()
+
+app.include_router(tm_router.router)
 
 @app.get("/")
 def read_root():
