@@ -16,6 +16,10 @@
 
             border-radius: 4px;
             background-color: variables.$color--blue;
+
+            &.halted {
+                background-color: variables.$color--red;
+            }
         }
     }
 
