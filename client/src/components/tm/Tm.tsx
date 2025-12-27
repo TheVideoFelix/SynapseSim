@@ -1,7 +1,8 @@
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Tape, { HeadMoveDir } from "./Tabe";
 import '../../styles/components/tm/tm.scss'
 import Container from "../ui/Container";
+import { toast } from "react-toastify";
 
 interface TM {
     states: string[];
@@ -21,12 +22,23 @@ const TM: React.FC<TMProps> = () => {
     const [machineState, setMachineState] = useState<TM>();
     const socketRef = useRef<WebSocket>(null);
     const autoStepTimeout = useRef<number>(0);
+    const reconnectTimeout = useRef<number>(0);
 
-    useEffect(() => {
-        socketRef.current = new WebSocket("ws://localhost:8000/ws/tm");
+    const connectWebSocket = () => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.close();
+        }
+        const ws = new WebSocket("ws://localhost:8000/ws/tm");
+        socketRef.current = ws;
 
         socketRef.current.onmessage = (event) => {
             const update = JSON.parse(event.data);
+            console.log(update);
+            if ('error' in update) {
+                toast.error(update.error);
+                return;
+            }
+            
             setMachineState((prev) => {
                 const base: TM =
                     prev ?? {
@@ -52,32 +64,51 @@ const TM: React.FC<TMProps> = () => {
 
                 return next;
             });
-
+            
+            if (update.isHalted) {
+                socketRef.current?.close();
+            }
         };
 
         socketRef.current.onopen = () => {
-            console.log("Websocket is conne cted.");
-
+            if (ws !== socketRef.current) return;
             socketRef.current?.send(JSON.stringify({
                 type: "init",
                 data: {
-                    input: "",
+                    input: '10001010',
                 }
             }));
         };
 
         socketRef.current.onclose = (event) => {
-            console.log("Socket closed");
+            if (ws !== socketRef.current) return;
+            //toast.warning("Socket closed");
 
+            reconnectTimeout.current = window.setTimeout(() => {
+                connectWebSocket();
+            }, 5000);
         };
 
         socketRef.current.onerror = (error) => {
-            console.log("Socket had an erroro: " + error);
+            if (ws !== socketRef.current) return;
+            toast.error(`Socket has an error: ${error}`);
 
+            reconnectTimeout.current = window.setTimeout(() => {
+                connectWebSocket();
+            }, 5000);
         };
+    };
 
+    useEffect(() => {
+        connectWebSocket();
 
         return () => {
+            if (reconnectTimeout.current) {
+                clearTimeout(reconnectTimeout.current);
+            }
+            if (autoStepTimeout.current) {
+                clearTimeout(autoStepTimeout.current);
+            }
             if (socketRef.current) {
                 socketRef.current.close();
             }
@@ -85,7 +116,6 @@ const TM: React.FC<TMProps> = () => {
     }, []);
 
     useEffect(() => {
-
         if (!machineState || machineState.isHalted) {
             return;
         }
@@ -107,7 +137,7 @@ const TM: React.FC<TMProps> = () => {
                 type: "step",
             }));
         } else {
-            console.log("Socket not open");
+            toast.error("Socket is not open.");
         }
     };
 
@@ -115,13 +145,10 @@ const TM: React.FC<TMProps> = () => {
         return <div>Loding turing machine ...</div>
     }
 
-
-    //const statesStr = `{${}}`;
-
     return (
         <div className="tm">
             <div className="tm-label">
-                <h1>M = &lang; {machineState?.states ? (
+                <h1 className={machineState?.isHalted ? 'halted' : ''}>M = &lang; {machineState?.states ? (
                     <>
                         {'{'}
                         {machineState.states.map((s, i) => (
