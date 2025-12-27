@@ -1,0 +1,16 @@
+.error-page {
+    font-size: 2rem;
+
+    .error-body {
+        font-size: 1.8rem;
+
+        .link {
+            color: #363636;
+            text-decoration: underline;
+
+            &:hover {
+                text-decoration: none;
+            }
+        }
+    }
+}
